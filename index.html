@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+        content="VisPro-Phys learns to estimate terrain friction, stiffness, and roughness from proprioception for outdoor quadruped navigation.">
+  <title>Seeing Through the Feet: Vision-Supervised Proprioceptive Terrain Physics Under Occlusion</title>
+
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #14243a;
+      --muted: #526176;
+      --blue: #2457a7;
+      --rule: #dce4ef;
+      --tint: #f3f7fc;
+      font-family: system-ui, sans-serif;
+      color: var(--ink);
+      background: #fff;
+      line-height: 1.65;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+
+    main {
+      width: min(58rem, calc(100% - 2.5rem));
+      margin-inline: auto;
+      padding-block: clamp(2.5rem, 7vw, 5rem) 4rem;
+    }
+
+    a { color: var(--blue); }
+
+    a:focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 4px;
+    }
+
+    .paper-header { text-align: center; }
+
+    h1, h2, h3 {
+      font-family: Georgia, serif;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.25rem, 5.7vw, 4.25rem);
+      letter-spacing: -.045em;
+      text-wrap: balance;
+    }
+
+    .subtitle {
+      display: block;
+      max-width: 34ch;
+      margin: .65rem auto 0;
+      font-size: clamp(1.25rem, 3vw, 2rem);
+      letter-spacing: -.025em;
+    }
+
+    .authors, .affiliations, .resources {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .authors {
+      max-width: 47rem;
+      margin: 1.5rem auto .4rem;
+      padding: 0;
+      gap: .1rem 1.15rem;
+      list-style: none;
+    }
+
+    .affiliations {
+      margin: .35rem 0 0;
+      gap: .15rem 1rem;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    sup { color: var(--blue); }
+
+    .resources {
+      gap: .55rem;
+      margin-top: 1.5rem;
+    }
+
+    .resource {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.65rem;
+      padding: .35rem 1rem;
+      border: 1px solid var(--rule);
+      border-radius: .35rem;
+      color: var(--blue);
+      font-size: .94rem;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .resource[aria-disabled="true"] { color: var(--muted); }
+    .resource[href]:hover { background: var(--tint); }
+
+    h2 {
+      margin: 0 0 .75rem;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+    }
+
+    .demo {
+      max-width: 48rem;
+      margin: clamp(2rem, 5vw, 3.5rem) auto 0;
+    }
+
+    .demo h2 { text-align: center; }
+
+    video {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #101b2c;
+      border-radius: .4rem;
+    }
+
+    .video-link {
+      margin: .6rem 0 0;
+      text-align: right;
+      font-size: .9rem;
+    }
+
+    .paper-section {
+      max-width: 48rem;
+      margin: 2rem auto 0;
+      padding-top: 1.6rem;
+      border-top: 1px solid var(--rule);
+    }
+
+    .paper-section p {
+  margin: 0 0 .9rem;
+  text-align: justify;
+}
+
+    .contributions li {
+  text-align: justify;
+}
+    .contributions {
+      margin: 0;
+      padding-inline-start: 1.35rem;
+    }
+
+    .contributions li + li { margin-top: .75rem; }
+
+    .experiment + .experiment { margin-top: 2rem; }
+
+    .experiment h3 {
+  margin: 0 0 .55rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+      gap: .7rem;
+      margin: 1.15rem 0 0;
+    }
+
+    .metrics div {
+      display: flex;
+      flex-direction: column;
+      gap: .15rem;
+      padding: .9rem 1rem;
+      border-top: 2px solid var(--blue);
+      background: var(--tint);
+    }
+
+    .metrics dt {
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .metrics dd {
+      order: -1;
+      margin: 0;
+      color: var(--blue);
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .paper-figure { margin: 1.25rem 0 0; }
+
+    .paper-figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--rule);
+      border-radius: .35rem;
+    }
+
+    .paper-figure figcaption {
+  margin-top: .5rem;
+  color: var(--muted);
+  font-size: .9rem;
+  text-align: justify;
+}
+
+    .paper-figure.figure-small {
+  width: 100%;
+  max-width: 32rem;
+  margin-inline: auto;
+}
+    .figure-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  }
+
+    .figure-grid .paper-figure { margin: 0; }
+
+    .bibtex {
+      margin: 0;
+      padding: 1rem;
+      overflow-x: auto;
+      border: 1px solid var(--rule);
+      border-radius: .35rem;
+      background: var(--tint);
+      font-size: .875rem;
+    }
+    .experiment[aria-labelledby="darkness-title"] {
+  margin-top: 3rem;
+}
+  </style>
+</head>
+<body>
+  <main>
+    <header class="paper-header">
+      <h1>
+        Seeing Through the Feet:
+        <span class="subtitle">
+          Vision-Supervised Proprioceptive Terrain Physics Under Occlusion
+        </span>
+      </h1>
+
+      <ul class="authors" aria-label="Authors">
+        <li>Fatemeh Alvankarian<sup>1</sup></li>
+        <li>Samarth Chopra<sup>2</sup></li>
+        <li>Juan Esteban Carlier Blanco<sup>1</sup></li>
+        <li>Owen Hoffman<sup>1</sup></li>
+        <li>Jianyu An<sup>1</sup></li>
+        <li>Jing Liang<sup>3</sup></li>
+        <li>Dinesh Manocha<sup>1</sup></li>
+      </ul>
+
+      <p class="affiliations">
+        <span><sup>1</sup> University of Maryland, College Park</span>
+        <span><sup>2</sup> University of Pennsylvania</span>
+        <span><sup>3</sup> Stanford University</span>
+      </p>
+
+      <nav class="resources" aria-label="Project resources">
+        <a class="resource" data-resource="arxiv" role="link"
+           aria-disabled="true">arXiv</a>
+        <a class="resource" data-resource="code" role="link"
+           aria-disabled="true">Code (Coming Soon)</a>
+        <a class="resource" data-resource="dataset" role="link"
+           aria-disabled="true">Dataset (Coming Soon)</a>
+      </nav>
+    </header>
+
+    <section class="demo" aria-labelledby="video-title">
+      <h2 id="video-title"></h2>
+      <video controls playsinline preload="metadata"
+             aria-labelledby="video-title"
+             src="./assets/video/video.mov">
+        Your browser does not support embedded video.
+      </video>
+      <p class="video-link">
+        <a href="./assets/video/video.mov"></a>
+      </p>
+    </section>
+
+    <section class="paper-section" aria-labelledby="abstract-title">
+      <h2 id="abstract-title">Abstract</h2>
+      <p>
+        We present VisPro-Phys, a vision-supervised learning-based framework
+        for estimating terrain physical properties from proprioceptive data to
+        support outdoor navigation. This is motivated by the limitations of
+        exteroceptive sensors to identify occluded terrain. We consider three
+        terrain properties: static friction, stiffness, and geometric roughness.
+        Rather than estimating precise physical property values, which would
+        require costly ground-truth measurements across large-scale outdoor
+        environments, we employ a vision-language model (VLM) to generate
+        pseudo-ground-truth labels for physical property ranges. Given noisy VLM
+        outputs, we formulate the problem as classification of properties into
+        ranges with resolutions feasible for navigation decisions.
+        To support this approach, we collect a multimodal dataset comprising
+        ∼3.3 km track length of visual, LiDAR, and proprioceptive data across
+        diverse outdoor terrains, including pavement, sand, mulch, dense
+        vegetation, and rocky surfaces. We train a neural network to predict
+        these vision-generated properties from proprioceptive time-series data.
+        Real-world experiments on a Ghost Robotics Vision 60 quadruped
+        demonstrate an application of the proposed method in avoiding high-risk
+        terrain that exteroceptive sensors fail to identify. Across the evaluated
+        scenarios and compared with baseline methods, our method reduces
+        vibration cost, root-mean-square IMU angular velocity and mean joint effort
+        by 22.7%, 27.2%, 2.4% respectively, on average. Code and dataset will be
+        released at the time of publication.
+      </p>
+    </section>
+
+    <section class="paper-section" aria-labelledby="contributions-title">
+      <h2 id="contributions-title">Main Contributions</h2>
+      <ul class="contributions">
+        <li>
+          <strong>Vision-supervised terrain dataset.</strong>
+          We collected synchronized RGB, LiDAR, and proprioceptive data along
+          approximately 3.3 km of outdoor routes. A vision-language model
+          generated weak labels for static friction, stiffness, and geometric
+          roughness. A Gaussian mixture model informed how we grouped the
+          continuous estimates into discrete classes.
+        </li>
+        <li>
+          <strong>Proprioceptive terrain classifier.</strong>
+          We developed a temporal cross-attention model that combines inertial
+          and joint measurements to predict friction, stiffness, and roughness
+          classes. At deployment, the classifier uses proprioception alone.
+        </li>
+        <li>
+          <strong>Navigation recovery and field evaluation.</strong>
+          We integrated the terrain predictions into a local navigation costmap
+          so a Ghost Robotics Vision 60 quadruped could backtrack and replan
+          after encountering hazardous terrain. We evaluated the approach in
+          real-world outdoor experiments.
+        </li>
+      </ul>
+    </section>
+
+    <section class="paper-section" aria-labelledby="method-title">
+      <h2 id="method-title">Method Overview</h2>
+      <p>
+        VisPro-Phys Overview: (i) RGB images from the robot front view camera are passed to a VLM to extract estimations of static
+friction coefficient, stiffness and geometric roughness of terrain in the range [0,1]. These estimations are then discretized to assign terrains
+with similar properties to the same discrete representative value. (ii) The labels derived from part (i) are used to train a classification model
+which takes proprioception data as input and outputs terrain classes based on representative friction, stiffness and roughness classes. (iii)
+For deployment, an A∗ planner is used to generate waypoints based on base local costmap from start point to goal point. A DWA planner
+is used to navigate between these waypoints. Proprioception cost of terrain is calculated with a constant frequency, using the model trained
+in (ii). If a high cost region is detected, the robot goes into recovery mode: it reverses and re-calculates the path to the goal point, this time
+avoiding high proprioceptive cost region.
+      </p>
+
+      
+      <figure class="paper-figure">
+        <img src="./assets/figures/overview.png"
+             alt="VisPro-Phys pipeline from vision-generated training labels to proprioceptive terrain classification and navigation recovery"
+             loading="lazy" decoding="async">
+        <figcaption></figcaption>
+      </figure>
+     
+    </section>
+
+    <section class="paper-section" aria-labelledby="experiments-title">
+      <h2 id="experiments-title">Real-World Experiments</h2>
+      <p>We evaluated the effectiveness of the proposed approach in several applications:
+</p>
+      <section class="experiment" aria-labelledby="navigation-title">
+        <h3 id="navigation-title">Recovery from occluded terrain hazards</h3>
+        <p>
+          VisPro-Phys is capable of detecting occluded high-risk terrain (hazards), using proprioception. Real-world experiments and evaluations include a pothole occluded by grass, a heap of dry grass and stones occluded by dry leaves. Across the evaluated scenarios, VisPro-Phys
+          achieved the following average reductions relative to the baseline
+          methods.
+        </p>
+        <dl class="metrics">
+          <div>
+            <dt>Vibration cost</dt>
+            <dd>22.7%</dd>
+          </div>
+          <div>
+            <dt>RMS IMU angular velocity</dt>
+            <dd>27.2%</dd>
+          </div>
+          <div>
+            <dt>Mean joint effort</dt>
+            <dd>2.4%</dd>
+          </div>
+        </dl>
+      </section>
+      
+      <figure class="paper-figure figure-small">
+        <img src="./assets/figures/first page figure.png">
+        <figcaption>Navigation trajectory of VisPro-Phys compared to navigation trajectory using vision-based PhysGS baseline. In this figure, VisPro-Phys avoids a pothole occluded with grass (hazard) by backtracking each time it walks into it. The right-hand-side column shows from top to down: Base costmap (PhysGS) with the proposed friction, stiffness, roughness and proprioception cost overlay. The robot experiences moderate terrain friction, stiffness and roughness walking on grass (blue-green). Stepping into the pothole, it experiences low friction and high roughness (orange- red), which lead to high proprioception cost (orange-red) and backtracking phase activation.</figcaption>
+      </figure>
+     
+    
+      <section class="experiment" aria-labelledby="darkness-title">
+        <h3 id="darkness-title">Terrain Perception in Darkness</h3>
+
+        <p>
+          Because VisPro-Phys relies only on proprioception for perceiving the terrain, it has the capability to assess terrain physics in dark conditions. This assessment aids navigation in dark scenarios.
+
+        </p>
+        <!-- Add your explanation here in one or more <p> elements. -->
+
+        <div class="figure-grid">
+          <figure class="paper-figure">
+            <img src="./assets/figures/darkness_iribe.png"
+                 alt="Describe what the first figure shows"
+                 loading="lazy" decoding="async">
+            <figcaption> A darkness scenario where the robot walks on a mixture of mulch and small bushes, and then on pebbles. The robot front RGB
+camera view and friction, stiffness, roughness and traversability cost colored trails on the base costmap (elevation map) are shown in this
+figure. Mulch and bushes correspond to moderate friction, stiffness and roughness costs. Pebbles correspond to moderate friction, low
+stiffness and high roughness. This is why traversability cost increases when the robot enters pebbles.</figcaption>
+          </figure>
+
+          <figure class="paper-figure">
+            <img src="./assets/figures/darkness_heap.png"
+                 alt="Describe what the second figure shows"
+                 loading="lazy" decoding="async">
+            <figcaption>A darkness scenario where the robot walks on short grass, and then a heap of dry grass. The robot front RGB camera view and
+friction, stiffness, roughness and traversability cost colored trails on the base costmap (elevation map) are shown in this figure. Short grass
+and dry grass correspond to moderately high friction and stiffness. Short grass has moderate roughness and heap of dry grass has high
+roughness cost. This reasonates the higher traversability cost when walking on the heap of dry grass.</figcaption>
+          </figure>
+
+          <figure class="paper-figure">
+            <img src="./assets/figures/darkness_mud.png"
+                 alt="Describe what the third figure shows"
+                 loading="lazy" decoding="async">
+            <figcaption>A darkness scenario where the robot walks on damp soil, with scattered small bushes. The robot front RGB camera view
+and friction, stiffness, roughness and traversability cost colored trails on the base costmap (elevation map) are shown in this figure. This
+scenario corresponds to moderate friction, low stiffness, high roughness and moderately high traversability cost.</figcaption>
+          </figure>
+        </div>
+        
+      </section>
+      </section>
+    </section>
+
+    <section class="paper-section" aria-labelledby="bibtex-title">
+      <h2 id="bibtex-title">BibTeX</h2>
+      <pre class="bibtex"><code>@misc{alvankarianSeeingThroughTheFeet,
+  title  = {Seeing Through the Feet: Vision-Supervised Proprioceptive Terrain Physics Under Occlusion},
+  author = {Alvankarian, Fatemeh and Chopra, Samarth and
+            Carlier Blanco, Juan Esteban and Hoffman, Owen and
+            An, Jianyu and Liang, Jing and Manocha, Dinesh}
+}</code></pre>
+    </section>
+  </main>
+
+  <script>
+    // Paste the public URLs here when they are ready.
+    const resourceUrls = {
+      arxiv: "",
+      Code: "",
+      Dataset: "",
+    };
+
+    for (const link of document.querySelectorAll("[data-resource]")) {
+      const url = resourceUrls[link.dataset.resource].trim();
+      if (url) {
+        link.href = url;
+        link.removeAttribute("aria-disabled");
+        link.removeAttribute("role");
+      }
+    }
+  </script>
+</body>
+</html>
